@@ -1,0 +1,346 @@
+Python Source Code
+import pygame
+
+import serial
+
+import math
+
+import time
+
+# =========================
+
+# SERIAL SETUP
+
+# =========================
+
+ser = serial.Serial('/dev/ttyUSB0', 9600)
+
+time.sleep(2)
+
+ser.reset_input_buffer()
+
+# =========================
+
+# PYGAME SETUP
+
+# =========================
+
+pygame.init()
+
+WIDTH = 800
+
+HEIGHT = 800
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+pygame.display.set_caption("Arduino Radar System")
+
+clock = pygame.time.Clock()
+
+# =========================
+
+# RADAR SETTINGS
+
+# =========================
+
+MAX_DISTANCE = 45
+
+MIN_DISTANCE = 3
+
+RADAR_RADIUS = 300
+
+BLIP_INTERVAL = 1.0
+
+DUPLICATE_DISTANCE = 20
+
+# =========================
+
+# RADAR VARIABLES
+
+# =========================
+
+angle = 0
+
+distance = 0
+
+blips = []
+
+last_blip_time = 0
+
+font = pygame.font.SysFont(None, 24)
+
+running = True
+
+# =========================
+
+# MAIN LOOP
+
+# =========================
+
+while running:
+
+   for event in pygame.event.get():
+
+       if event.type == pygame.QUIT:
+
+           running = False
+
+   if ser.in_waiting:
+
+       try:
+
+           line = ser.readline().decode(errors='ignore').strip()
+
+           if "," in line:
+
+               angle, distance = map(float, line.split(","))
+
+               if MIN_DISTANCE <= distance <= MAX_DISTANCE:
+
+                   scaled_distance = (
+
+                      distance / MAX_DISTANCE
+
+                   ) * RADAR_RADIUS
+
+                   rad = math.radians(angle)
+
+                   x = WIDTH // 2 + scaled_distance * math.cos(rad)
+
+                   y = HEIGHT - scaled_distance * math.sin(rad)
+
+                   current_time = time.time()
+
+                   if current_time - last_blip_time >= BLIP_INTERVAL:
+
+                       duplicate = False
+
+                       for blip in blips:
+
+                           bx, by, brightness, dist, color = blip
+
+                           dist_between = math.sqrt(
+
+                               (x - bx) ** 2 +
+
+                               (y - by) ** 2
+
+                           )
+
+                           if dist_between < DUPLICATE_DISTANCE:
+
+                               duplicate = True
+
+                               break
+
+                       if distance <= 15:
+
+                           color = (255, 0, 0)
+
+                       elif distance <= 30:
+
+                           color = (255, 255, 0)
+
+                       else:
+
+                           color = (0, 255, 0)
+
+                       if not duplicate:
+
+                           blips.append([
+
+                               x,
+
+                               y,
+
+                               255,
+
+                               distance,
+
+                               color
+
+                           ])
+
+                       last_blip_time = current_time
+
+       except:
+
+           pass
+
+   screen.fill((0, 0, 0))
+
+   center_x = WIDTH // 2
+
+   center_y = HEIGHT
+
+   pygame.draw.circle(
+
+       screen,
+
+       (0, 255, 0),
+
+       (center_x, center_y),
+
+       300,
+
+       1
+
+   )
+
+   pygame.draw.circle(
+
+       screen,
+
+       (0, 255, 0),
+
+       (center_x, center_y),
+
+       200,
+
+       1
+
+   )
+
+   pygame.draw.circle(
+
+       screen,
+
+       (0, 255, 0),
+
+       (center_x, center_y),
+
+       100,
+
+       1
+
+   )
+
+   pygame.draw.line(
+
+       screen,
+
+       (0, 100, 0),
+
+       (center_x - 300, center_y),
+
+       (center_x + 300, center_y),
+
+       1
+
+   )
+
+   pygame.draw.line(
+
+       screen,
+
+       (0, 100, 0),
+
+       (center_x, center_y),
+
+       (center_x, center_y - 300),
+
+       1
+
+   )
+
+   rad = math.radians(angle)
+
+   sweep_x = center_x + RADAR_RADIUS * math.cos(rad)
+
+   sweep_y = center_y - RADAR_RADIUS * math.sin(rad)
+
+   pygame.draw.line(
+
+       screen,
+
+       (0, 255, 0),
+
+       (center_x, center_y),
+
+       (sweep_x, sweep_y),
+
+       3
+
+   )
+
+   for blip in blips[:]:
+
+       x, y, brightness, dist, color = blip
+
+       r = min(color[0], brightness)
+
+       g = min(color[1], brightness)
+
+       b = min(color[2], brightness)
+
+       fade_color = (r, g, b)
+
+       pygame.draw.circle(
+
+           screen,
+
+           fade_color,
+
+           (int(x), int(y)),
+
+           6
+
+       )
+
+       distance_text = font.render(
+
+           f"{dist:.1f} cm",
+
+           True,
+
+           fade_color
+
+       )
+
+       screen.blit(
+
+           distance_text,
+
+           (int(x) + 10, int(y) - 10)
+
+       )
+
+       blip[2] -= 2
+
+       if blip[2] <= 0:
+
+           blips.remove(blip)
+
+   angle_text = font.render(
+
+       f"Angle: {angle:.1f}°",
+
+       True,
+
+       (0, 255, 0)
+
+ )
+
+   distance_text = font.render(
+
+       f"Distance: {distance:.1f} cm",
+
+       True,
+
+       (0, 255, 0)
+
+   )
+
+   screen.blit(angle_text, (20, 20))
+
+   screen.blit(distance_text, (20, 50))
+
+   pygame.display.update()
+
+   clock.tick(60)
+
+ser.close()
+
+pygame.quit()
+
+ 
