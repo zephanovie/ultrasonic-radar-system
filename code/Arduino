@@ -1,0 +1,91 @@
+Arduino Source Code
+#include <Servo.h>
+
+const int trigPin = 9;
+
+const int echoPin = 10;
+
+Servo radarServo;
+
+float getDistance() {
+
+ long duration;
+
+ digitalWrite(trigPin, LOW);
+
+ delayMicroseconds(2);
+
+ digitalWrite(trigPin, HIGH);
+
+ delayMicroseconds(10);
+
+ digitalWrite(trigPin, LOW);
+
+ duration = pulseIn(echoPin, HIGH, 30000);
+
+ if (duration == 0) {
+
+   return -1;
+
+ }
+
+ float distance = duration * 0.0343 / 2.0;
+
+ if (distance < 2 || distance > 400) {
+
+   return -1;
+
+ }
+
+ return distance;
+
+}
+
+void setup() {
+
+ pinMode(trigPin, OUTPUT);
+
+ pinMode(echoPin, INPUT);
+
+ radarServo.attach(6);
+
+ Serial.begin(9600);
+
+}
+
+void loop() {
+
+ for (int angle = 0; angle <= 180; angle++) {
+
+   radarServo.write(angle);
+
+   delay(20);
+
+   float distance = getDistance();
+
+   Serial.print(angle);
+
+   Serial.print(",");
+
+   Serial.println(distance);
+
+ }
+
+ for (int angle = 180; angle >= 0; angle--) {
+
+   radarServo.write(angle);
+
+   delay(20);
+
+   float distance = getDistance();
+
+   Serial.print(angle);
+
+   Serial.print(",");
+
+   Serial.println(distance);
+
+ }
+
+}
+
