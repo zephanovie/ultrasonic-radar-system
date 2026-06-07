@@ -39,9 +39,9 @@ The sensor rotates between 0° and 180° while collecting distance measurements.
 
 ## Software
 
- Arduino IDE
- python
- pygame
+ - Arduino IDE
+ - python
+ - pygame
 
 ---
  
@@ -67,11 +67,15 @@ Handles:
 
 ## Prototype
 
-![Prototype](ImagesI)
+![Prototype](Images/IMG_3794.jpeg)
 
 ## Circuit Diagram
 
-![Circuit Diagram](Images/schematic.png)
+![Circuit Diagram](Images/IMG_3792.jpeg)
+
+## Python
+
+![Python](Images/IMG_3793.jpeg)
 
 ---
 
