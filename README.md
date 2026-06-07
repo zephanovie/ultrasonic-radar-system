@@ -87,6 +87,12 @@ Handles:
 - Data logging
 - Object tracking
 
+  ---
+
+  ## Install Dependencies
+
+  pip install -r requirements.txt
+
 ---
 
 ## Author
